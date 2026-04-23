@@ -1,0 +1,19 @@
+// middleware/auth.js — Verificación de JWT
+const jwt = require('jsonwebtoken');
+
+const SECRET = process.env.JWT_SECRET || 'correos_mx_secret_2024';
+
+function authMiddleware(req, res, next) {
+  const header = req.headers['authorization'];
+  if (!header) return res.status(401).json({ error: 'Token requerido' });
+
+  const token = header.startsWith('Bearer ') ? header.slice(7) : header;
+  try {
+    req.user = jwt.verify(token, SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Token inválido o expirado' });
+  }
+}
+
+module.exports = { authMiddleware, SECRET };

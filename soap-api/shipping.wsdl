@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WSDL — Servicio Nacional de Correos de México
+  Operaciones:
+    1. CalculateShippingCost  → devuelve costo exacto y código de barras
+    2. ValidatePostalCode     → verifica si el destino es válido
+-->
+<definitions
+  name            = "NationalPostService"
+  targetNamespace = "http://correosnacional.mx/soap"
+  xmlns           = "http://schemas.xmlsoap.org/wsdl/"
+  xmlns:tns       = "http://correosnacional.mx/soap"
+  xmlns:xsd       = "http://www.w3.org/2001/XMLSchema"
+  xmlns:soap      = "http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:wsdl      = "http://schemas.xmlsoap.org/wsdl/">
+
+  <!-- ════════════════════════════════════════════
+       TIPOS DE DATOS
+  ════════════════════════════════════════════ -->
+  <types>
+    <xsd:schema targetNamespace="http://correosnacional.mx/soap">
+
+      <!-- ── CalculateShippingCost ── -->
+      <xsd:element name="CalculateShippingCostRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="weight" type="xsd:decimal"
+              minOccurs="1" maxOccurs="1"/>          <!-- kg -->
+            <xsd:element name="width"  type="xsd:decimal"
+              minOccurs="1" maxOccurs="1"/>          <!-- cm -->
+            <xsd:element name="height" type="xsd:decimal"
+              minOccurs="1" maxOccurs="1"/>          <!-- cm -->
+            <xsd:element name="depth"  type="xsd:decimal"
+              minOccurs="1" maxOccurs="1"/>          <!-- cm -->
+            <xsd:element name="serviceType" type="xsd:string"
+              minOccurs="0" maxOccurs="1"/>          <!-- STANDARD | EXPRESS | OVERNIGHT -->
+            <xsd:element name="originPostalCode"      type="xsd:string" minOccurs="0"/>
+            <xsd:element name="destinationPostalCode" type="xsd:string" minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="CalculateShippingCostResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="cost"          type="xsd:decimal"/>
+            <xsd:element name="currency"      type="xsd:string"/>    <!-- MXN -->
+            <xsd:element name="barcode"       type="xsd:string"/>    <!-- código único -->
+            <xsd:element name="estimatedDays" type="xsd:integer"/>
+            <xsd:element name="serviceType"   type="xsd:string"/>
+            <xsd:element name="taxAmount"     type="xsd:decimal"/>   <!-- IVA -->
+            <xsd:element name="totalWithTax"  type="xsd:decimal"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <!-- ── ValidatePostalCode ── -->
+      <xsd:element name="ValidatePostalCodeRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="postalCode" type="xsd:string" minOccurs="1"/>
+            <xsd:element name="country"    type="xsd:string" minOccurs="0"/>  <!-- default: MX -->
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="ValidatePostalCodeResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="isValid"    type="xsd:boolean"/>
+            <xsd:element name="postalCode" type="xsd:string"/>
+            <xsd:element name="city"       type="xsd:string"/>
+            <xsd:element name="state"      type="xsd:string"/>
+            <xsd:element name="country"    type="xsd:string"/>
+            <xsd:element name="zone"       type="xsd:integer"/>   <!-- zona tarifaria 1-5 -->
+            <xsd:element name="message"    type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+    </xsd:schema>
+  </types>
+
+  <!-- ════════════════════════════════════════════
+       MENSAJES
+  ════════════════════════════════════════════ -->
+  <message name="CalculateShippingCostInput">
+    <part name="parameters" element="tns:CalculateShippingCostRequest"/>
+  </message>
+  <message name="CalculateShippingCostOutput">
+    <part name="parameters" element="tns:CalculateShippingCostResponse"/>
+  </message>
+
+  <message name="ValidatePostalCodeInput">
+    <part name="parameters" element="tns:ValidatePostalCodeRequest"/>
+  </message>
+  <message name="ValidatePostalCodeOutput">
+    <part name="parameters" element="tns:ValidatePostalCodeResponse"/>
+  </message>
+
+  <!-- ════════════════════════════════════════════
+       PORT TYPE (interfaz abstracta)
+  ════════════════════════════════════════════ -->
+  <portType name="NationalPostServicePortType">
+    <operation name="CalculateShippingCost">
+      <input  message="tns:CalculateShippingCostInput"/>
+      <output message="tns:CalculateShippingCostOutput"/>
+    </operation>
+    <operation name="ValidatePostalCode">
+      <input  message="tns:ValidatePostalCodeInput"/>
+      <output message="tns:ValidatePostalCodeOutput"/>
+    </operation>
+  </portType>
+
+  <!-- ════════════════════════════════════════════
+       BINDING (protocolo concreto)
+  ════════════════════════════════════════════ -->
+  <binding name="NationalPostServiceBinding" type="tns:NationalPostServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <operation name="CalculateShippingCost">
+      <soap:operation soapAction="http://correosnacional.mx/soap/CalculateShippingCost"/>
+      <input>  <soap:body use="literal"/> </input>
+      <output> <soap:body use="literal"/> </output>
+    </operation>
+
+    <operation name="ValidatePostalCode">
+      <soap:operation soapAction="http://correosnacional.mx/soap/ValidatePostalCode"/>
+      <input>  <soap:body use="literal"/> </input>
+      <output> <soap:body use="literal"/> </output>
+    </operation>
+  </binding>
+
+  <!-- ════════════════════════════════════════════
+       SERVICE (endpoint físico)
+  ════════════════════════════════════════════ -->
+  <service name="NationalPostService">
+    <port name="NationalPostServicePort" binding="tns:NationalPostServiceBinding">
+      <soap:address location="http://localhost:3002/soap"/>
+    </port>
+  </service>
+
+</definitions>
